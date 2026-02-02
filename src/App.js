@@ -90,41 +90,97 @@ export default function CRMApp() {
 
 function Login({ onLogin }) {
 
-  const [email,setEmail]=useState("");
-  const [password,setPassword]=useState("");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [showPass, setShowPass] = React.useState(false);
 
   const login = () => {
 
-    fetch(`${BASE_URL}/login`,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({email,password})
+    fetch(`${BASE_URL}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
     })
-    .then(res=>res.json())
-    .then(data=>{
+      .then(res => res.json())
+      .then(data => {
 
-      if(!data.success){
-        alert("Invalid login");
-        return;
-      }
+        if (!data.success) {
+          alert("Invalid login");
+          return;
+        }
 
-      localStorage.setItem("userId",data.user.id);
-      localStorage.setItem("role",data.user.role);
-      localStorage.setItem("name",data.user.name);
+        localStorage.setItem("userId", data.user.id);
+        localStorage.setItem("role", data.user.role);
+        localStorage.setItem("name", data.user.name);
 
-      onLogin(data.user.role);
-    });
+        onLogin(data.user.role);
+      });
   };
 
   return (
-    <div>
-      <h3>Login</h3>
-      <input placeholder="Email" onChange={e=>setEmail(e.target.value)} />
-      <input placeholder="Password" type="password" onChange={e=>setPassword(e.target.value)} />
-      <button onClick={login}>Login</button>
+    <div style={loginPage}>
+
+      <div style={loginCard}>
+
+        {/* LOGO */}
+        <div style={{ textAlign: "center", marginBottom: 10 }}>
+          <img 
+            src="https://via.placeholder.com/120x40?text=DatascienceIRC" 
+            alt="logo"
+          />
+        </div>
+
+        <h2 style={welcome}>Hi, Welcome Back</h2>
+        <p style={subText}>Enter your credentials to continue</p>
+
+        <input
+          style={loginInput}
+          placeholder="Email Address / Username"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        />
+
+        <div style={{ position: "relative" }}>
+          <input
+            style={loginInput}
+            type={showPass ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
+
+          <span
+            onClick={() => setShowPass(!showPass)}
+            style={eyeIcon}
+          >
+            👁
+          </span>
+        </div>
+
+        <div style={row}>
+
+          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <input type="checkbox" defaultChecked />
+            Keep me logged in
+          </label>
+
+          <span style={forgot}>Forgot Password?</span>
+
+        </div>
+
+        <button style={signBtn} onClick={login}>
+          Sign In
+        </button>
+
+        <p style={{ marginTop: 15, textAlign: "center" }}>
+          Don’t have an account?
+        </p>
+
+      </div>
     </div>
   );
 }
+
 
 /* ================= UPLOAD ================= */
 
@@ -213,3 +269,75 @@ function Records({ records, loadByDate }) {
     </div>
   );
 }
+
+const loginPage = {
+  height: "100vh",
+  background: "#f1f5f9",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center"
+};
+
+const loginCard = {
+  width: 380,
+  background: "#fff",
+  padding: 40,
+  borderRadius: 16,
+  boxShadow: "0 20px 40px rgba(0,0,0,0.08)"
+};
+
+const welcome = {
+  textAlign: "center",
+  color: "#6d28d9",
+  marginBottom: 6
+};
+
+const subText = {
+  textAlign: "center",
+  color: "#64748b",
+  marginBottom: 25
+};
+
+const loginInput = {
+  width: "100%",
+  padding: "14px 16px",
+  borderRadius: 10,
+  border: "1px solid #d1d5db",
+  fontSize: 15,
+  marginBottom: 16,
+  outline: "none"
+};
+
+const row = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  fontSize: 14,
+  marginBottom: 20
+};
+
+const forgot = {
+  color: "#6d28d9",
+  cursor: "pointer",
+  fontWeight: 500
+};
+
+const signBtn = {
+  width: "100%",
+  padding: "14px",
+  background: "#6d28d9",
+  color: "#fff",
+  border: "none",
+  borderRadius: 12,
+  fontSize: 16,
+  fontWeight: 600,
+  cursor: "pointer"
+};
+
+const eyeIcon = {
+  position: "absolute",
+  right: 14,
+  top: 14,
+  cursor: "pointer",
+  opacity: 0.6
+};
