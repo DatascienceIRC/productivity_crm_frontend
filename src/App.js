@@ -6,11 +6,10 @@ const BASE_URL = "https://productivity-crm-backend-bafw.onrender.com";
 /* ================= FORMAT ================= */
 
 function formatDate(d) {
-  const date = new Date(d);
-  return date.toLocaleDateString();
+  return new Date(d).toLocaleDateString();
 }
 
-/* ================= MAIN ================= */
+/* ================= MAIN APP ================= */
 
 export default function CRMApp() {
 
@@ -38,7 +37,7 @@ export default function CRMApp() {
 
   }, [isAuth]);
 
-/* ================= DATE LOAD ================= */
+/* ================= LOAD BY DATE ================= */
 
   const loadByDate = (date) => {
 
@@ -65,22 +64,56 @@ export default function CRMApp() {
     setIsAuth(false);
   };
 
-  if (!isAuth) return <Login onLogin={(role)=> {
+  if (!isAuth) return <Login onLogin={(role)=>{
     setIsAuth(true);
     setIsAdmin(role==="admin");
   }} />;
 
   return (
-    <div style={{ padding: 30 }}>
+    <div style={layout}>
 
-      <h2>CRM Dashboard {isAdmin && " (Admin)"}</h2>
+      {/* SIDEBAR */}
+      <div style={sidebar}>
 
-      <button onClick={()=>setPage("upload")}>Upload</button>
-      <button onClick={()=>setPage("records")}>Records</button>
-      <button onClick={logout}>Logout</button>
+        <h2 style={{color:"#fff"}}>CRM Panel</h2>
 
-      {page==="upload" && <Upload setRecords={setRecords} />}
-      {page==="records" && <Records records={records} loadByDate={loadByDate} />}
+        <div style={menuItem} onClick={()=>setPage("upload")}>
+          ➕ Add Productivity
+        </div>
+
+        <div style={menuItem} onClick={()=>setPage("records")}>
+          📊 Records
+        </div>
+
+        <div style={menuItem} onClick={logout}>
+          🚪 Logout
+        </div>
+
+      </div>
+
+      {/* MAIN AREA */}
+      <div style={mainArea}>
+
+        {/* TOP BAR */}
+        <div style={topBar}>
+          <h3>Dashboard {isAdmin && "(Admin)"}</h3>
+          <span>👤 {localStorage.getItem("name")}</span>
+        </div>
+
+        {/* CONTENT */}
+        <div style={contentCard}>
+
+          {page==="upload" && <Upload setRecords={setRecords} />}
+          {page==="records" && (
+            <Records 
+              records={records} 
+              loadByDate={loadByDate} 
+            />
+          )}
+
+        </div>
+
+      </div>
 
     </div>
   );
@@ -90,31 +123,31 @@ export default function CRMApp() {
 
 function Login({ onLogin }) {
 
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [showPass, setShowPass] = React.useState(false);
+  const [email,setEmail]=useState("");
+  const [password,setPassword]=useState("");
+  const [show,setShow]=useState(false);
 
   const login = () => {
 
-    fetch(`${BASE_URL}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
+    fetch(`${BASE_URL}/login`,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({email,password})
     })
-      .then(res => res.json())
-      .then(data => {
+    .then(res=>res.json())
+    .then(data=>{
 
-        if (!data.success) {
-          alert("Invalid login");
-          return;
-        }
+      if(!data.success){
+        alert("Invalid login");
+        return;
+      }
 
-        localStorage.setItem("userId", data.user.id);
-        localStorage.setItem("role", data.user.role);
-        localStorage.setItem("name", data.user.name);
+      localStorage.setItem("userId",data.user.id);
+      localStorage.setItem("role",data.user.role);
+      localStorage.setItem("name",data.user.name);
 
-        onLogin(data.user.role);
-      });
+      onLogin(data.user.role);
+    });
   };
 
   return (
@@ -122,49 +155,28 @@ function Login({ onLogin }) {
 
       <div style={loginCard}>
 
-        {/* LOGO */}
-        <div style={{ textAlign: "center", marginBottom: 10 }}>
-          <img 
-            src="https://via.placeholder.com/120x40?text=DatascienceIRC" 
-            alt="logo"
-          />
-        </div>
-
         <h2 style={welcome}>Hi, Welcome Back</h2>
         <p style={subText}>Enter your credentials to continue</p>
 
-        <input
+        <input 
           style={loginInput}
-          placeholder="Email Address / Username"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
+          placeholder="Email"
+          onChange={e=>setEmail(e.target.value)}
         />
 
-        <div style={{ position: "relative" }}>
-          <input
+        <div style={{position:"relative"}}>
+
+          <input 
             style={loginInput}
-            type={showPass ? "text" : "password"}
+            type={show?"text":"password"}
             placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={e=>setPassword(e.target.value)}
           />
 
-          <span
-            onClick={() => setShowPass(!showPass)}
+          <span 
             style={eyeIcon}
-          >
-            👁
-          </span>
-        </div>
-
-        <div style={row}>
-
-          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <input type="checkbox" defaultChecked />
-            Keep me logged in
-          </label>
-
-          <span style={forgot}>Forgot Password?</span>
+            onClick={()=>setShow(!show)}
+          >👁</span>
 
         </div>
 
@@ -172,15 +184,10 @@ function Login({ onLogin }) {
           Sign In
         </button>
 
-        <p style={{ marginTop: 15, textAlign: "center" }}>
-          Don’t have an account?
-        </p>
-
       </div>
     </div>
   );
 }
-
 
 /* ================= UPLOAD ================= */
 
@@ -214,11 +221,28 @@ function Upload({ setRecords }) {
 
   return (
     <div>
+
       <h3>Add Productivity</h3>
 
-      <input type="date" value={date} onChange={e=>setDate(e.target.value)} />
-      <textarea value={task} onChange={e=>setTask(e.target.value)} />
-      <button onClick={submit}>Save</button>
+      <input 
+        type="date" 
+        style={inputBox}
+        value={date}
+        onChange={e=>setDate(e.target.value)}
+      />
+
+      <textarea 
+        style={inputBox}
+        rows="4"
+        placeholder="What did you work on?"
+        value={task}
+        onChange={e=>setTask(e.target.value)}
+      />
+
+      <button style={modernBtn} onClick={submit}>
+        Save Productivity
+      </button>
+
     </div>
   );
 }
@@ -243,11 +267,25 @@ function Records({ records, loadByDate }) {
   return (
     <div>
 
-      <input type="date" onChange={e=>setDate(e.target.value)} />
-      <button onClick={()=>loadByDate(date)}>Load</button>
-      <button onClick={exportExcel}>Export Excel</button>
+      <div style={filterRow}>
 
-      <table border="1" cellPadding="5">
+        <input 
+          type="date" 
+          style={inputBox}
+          onChange={e=>setDate(e.target.value)}
+        />
+
+        <button style={modernBtn} onClick={()=>loadByDate(date)}>
+          Load
+        </button>
+
+        <button style={excelBtn} onClick={exportExcel}>
+          Export Excel
+        </button>
+
+      </div>
+
+      <table style={tableStyle}>
         <thead>
           <tr>
             <th>User</th>
@@ -270,74 +308,144 @@ function Records({ records, loadByDate }) {
   );
 }
 
+/* ================= STYLES ================= */
+
+const layout = {
+  display:"flex",
+  height:"100vh",
+  background:"#f1f5f9"
+};
+
+const sidebar = {
+  width:220,
+  background:"#1e293b",
+  padding:20,
+  display:"flex",
+  flexDirection:"column",
+  gap:14
+};
+
+const menuItem = {
+  color:"#fff",
+  padding:"12px 14px",
+  background:"#334155",
+  borderRadius:10,
+  cursor:"pointer"
+};
+
+const mainArea = {
+  flex:1,
+  display:"flex",
+  flexDirection:"column"
+};
+
+const topBar = {
+  background:"#fff",
+  padding:"14px 24px",
+  display:"flex",
+  justifyContent:"space-between",
+  boxShadow:"0 2px 10px rgba(0,0,0,0.05)"
+};
+
+const contentCard = {
+  margin:25,
+  background:"#fff",
+  padding:25,
+  borderRadius:16,
+  boxShadow:"0 15px 30px rgba(0,0,0,0.08)",
+  flex:1
+};
+
+/* LOGIN */
+
 const loginPage = {
-  height: "100vh",
-  background: "#f1f5f9",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center"
+  height:"100vh",
+  display:"flex",
+  justifyContent:"center",
+  alignItems:"center",
+  background:"#f1f5f9"
 };
 
 const loginCard = {
-  width: 380,
-  background: "#fff",
-  padding: 40,
-  borderRadius: 16,
-  boxShadow: "0 20px 40px rgba(0,0,0,0.08)"
+  width:360,
+  padding:40,
+  background:"#fff",
+  borderRadius:16,
+  boxShadow:"0 20px 40px rgba(0,0,0,0.08)"
 };
 
 const welcome = {
-  textAlign: "center",
-  color: "#6d28d9",
-  marginBottom: 6
+  color:"#6d28d9",
+  textAlign:"center"
 };
 
 const subText = {
-  textAlign: "center",
-  color: "#64748b",
-  marginBottom: 25
+  textAlign:"center",
+  color:"#64748b",
+  marginBottom:25
 };
 
 const loginInput = {
-  width: "100%",
-  padding: "14px 16px",
-  borderRadius: 10,
-  border: "1px solid #d1d5db",
-  fontSize: 15,
-  marginBottom: 16,
-  outline: "none"
-};
-
-const row = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  fontSize: 14,
-  marginBottom: 20
-};
-
-const forgot = {
-  color: "#6d28d9",
-  cursor: "pointer",
-  fontWeight: 500
+  width:"100%",
+  padding:14,
+  borderRadius:10,
+  border:"1px solid #d1d5db",
+  marginBottom:16
 };
 
 const signBtn = {
-  width: "100%",
-  padding: "14px",
-  background: "#6d28d9",
-  color: "#fff",
-  border: "none",
-  borderRadius: 12,
-  fontSize: 16,
-  fontWeight: 600,
-  cursor: "pointer"
+  width:"100%",
+  padding:14,
+  background:"#6d28d9",
+  color:"#fff",
+  border:"none",
+  borderRadius:12,
+  cursor:"pointer"
 };
 
 const eyeIcon = {
-  position: "absolute",
-  right: 14,
-  top: 14,
-  cursor: "pointer",
-  opacity: 0.6
+  position:"absolute",
+  right:14,
+  top:14,
+  cursor:"pointer"
+};
+
+/* COMMON */
+
+const inputBox = {
+  width:"100%",
+  padding:12,
+  borderRadius:10,
+  border:"1px solid #d1d5db",
+  marginBottom:12
+};
+
+const modernBtn = {
+  padding:"12px 18px",
+  background:"#4f46e5",
+  color:"#fff",
+  border:"none",
+  borderRadius:10,
+  cursor:"pointer"
+};
+
+const excelBtn = {
+  padding:"12px 18px",
+  background:"#16a34a",
+  color:"#fff",
+  border:"none",
+  borderRadius:10,
+  cursor:"pointer"
+};
+
+const filterRow = {
+  display:"flex",
+  gap:10,
+  flexWrap:"wrap",
+  marginBottom:20
+};
+
+const tableStyle = {
+  width:"100%",
+  borderCollapse:"collapse"
 };
