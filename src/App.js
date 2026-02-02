@@ -5,8 +5,8 @@ const BASE="https://productivity-crm-backend-bafw.onrender.com";
 
 export default function App(){
 
-const [auth,setAuth]=useState(!!localStorage.userId);
-const [role,setRole]=useState(localStorage.role);
+const [auth,setAuth]=useState(!!localStorage.getItem("userId"));
+const [role,setRole]=useState(localStorage.getItem("role"));
 const [page,setPage]=useState("dashboard");
 const [records,setRecords]=useState([]);
 const [users,setUsers]=useState([]);
@@ -15,7 +15,7 @@ const [report,setReport]=useState([]);
 useEffect(()=>{ if(auth) loadRecords(); },[auth]);
 
 const loadRecords=()=>{
-  const url= role==="admin"?`${BASE}/records`:`${BASE}/records/${localStorage.userId}`;
+  const url= role==="admin"?`${BASE}/records`:`${BASE}/records/${localStorage.getItem("userId")}`;
   fetch(url).then(r=>r.json()).then(setRecords);
 }
 
@@ -41,7 +41,7 @@ return(
 {/* CONTENT */}
 <div style={{flex:1,padding:30,background:"#f1f5f9"}}>
 
-{page==="dashboard" && <h2>Welcome {localStorage.name}</h2>}
+{page==="dashboard" && <h2>Welcome {localStorage.getItem("name")}</h2>}
 
 {page==="add" && <Add reload={loadRecords}/>}
 
@@ -83,9 +83,9 @@ body:JSON.stringify({email,password})
 .then(r=>r.json())
 .then(d=>{
 if(!d.success) return alert("Invalid");
-localStorage.userId=d.user.id;
-localStorage.role=d.user.role;
-localStorage.name=d.user.name;
+localStorage.getItem("userId")=d.user.id;
+localStorage.getItem("role")=d.user.role;
+localStorage.getItem("name")=d.user.name;
 onLogin(d.user.role);
 });
 }
@@ -113,7 +113,7 @@ const save=()=>{
 fetch(`${BASE}/records`,{
 method:"POST",
 headers:{"Content-Type":"application/json"},
-body:JSON.stringify({date,task,userId:localStorage.userId})
+body:JSON.stringify({date,task,userId:localStorage.getItem("userId")})
 }).then(()=>reload());
 }
 
@@ -135,7 +135,7 @@ const [search,setSearch]=useState("");
 const [month,setMonth]=useState("");
 
 const filter=()=>{
-fetch(`${BASE}/filter-records?role=${localStorage.role}&userId=${localStorage.userId}&search=${search}&month=${month}`)
+fetch(`${BASE}/filter-records?role=${localStorage.getItem("role")}&userId=${localStorage.getItem("userId")}&search=${search}&month=${month}`)
 .then(r=>r.json()).then(setRecords);
 }
 
@@ -178,7 +178,7 @@ return(
 function Reports({report,setReport}){
 
 const load=()=>{
-fetch(`${BASE}/monthly-report?role=${localStorage.role}&userId=${localStorage.userId}`)
+fetch(`${BASE}/monthly-report?role=${localStorage.getItem("role")}&userId=${localStorage.getItem("userId")}`)
 .then(r=>r.json()).then(setReport);
 }
 
