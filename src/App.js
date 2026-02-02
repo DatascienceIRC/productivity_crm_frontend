@@ -83,12 +83,15 @@ body:JSON.stringify({email,password})
 .then(r=>r.json())
 .then(d=>{
 if(!d.success) return alert("Invalid");
-localStorage.getItem("userId")=d.user.id;
-localStorage.getItem("role")=d.user.role;
-localStorage.getItem("name")=d.user.name;
+
+localStorage.setItem("userId", d.user.id);
+localStorage.setItem("role", d.user.role);
+localStorage.setItem("name", d.user.name);
+
 onLogin(d.user.role);
 });
 }
+
 
 return(
 <div style={loginPage}>
