@@ -17,7 +17,7 @@ function formatDate(dateStr) {
 
 export default function CRMApp() {
 
-  const [isAuth, setIsAuth] = useState(false);
+  const [isAuth, setIsAuth] = useState(!!localStorage.getItem("userId"));
   const [isAdmin, setIsAdmin] = useState(false);
   const [page, setPage] = useState("upload");
   const [records, setRecords] = useState([]);
