@@ -1,4 +1,4 @@
-import React,{useState,useEffect} from "react";
+import React,{useState,useEffect, useCallback} from "react";
 import * as XLSX from "xlsx";
 
 const BASE="https://productivity-crm-backend-bafw.onrender.com";
@@ -12,12 +12,22 @@ const [records,setRecords]=useState([]);
 const [users,setUsers]=useState([]);
 const [report,setReport]=useState([]);
 
-useEffect(()=>{ if(auth) loadRecords(); },[auth]);
+const loadRecords = useCallback(() => {
+  const url =
+    role === "admin"
+      ? `${BASE}/records`
+      : `${BASE}/records/${localStorage.getItem("userId")}`;
 
-const loadRecords=()=>{
-  const url= role==="admin"?`${BASE}/records`:`${BASE}/records/${localStorage.getItem("userId")}`;
-  fetch(url).then(r=>r.json()).then(setRecords);
-}
+  fetch(url)
+    .then(r => r.json())
+    .then(setRecords);
+}, [role]);
+
+
+useEffect(() => {
+  if (auth) loadRecords();
+}, [auth, loadRecords]);
+
 
 if(!auth) return <Login onLogin={(r)=>{setAuth(true);setRole(r)}}/>
 
@@ -210,8 +220,11 @@ return(
 function Users({users,setUsers}){
 
 useEffect(()=>{
-fetch(`${BASE}/users`).then(r=>r.json()).then(setUsers);
-},[]);
+  fetch(`${BASE}/users`)
+    .then(r=>r.json())
+    .then(data => setUsers(data));
+}, [setUsers]);
+
 
 const del=id=>{
 fetch(`${BASE}/users/${id}`,{method:"DELETE"}).then(()=>{
