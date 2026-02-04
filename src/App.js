@@ -60,7 +60,7 @@ return (
 {/* SIDEBAR */}
 <div className="w-64 bg-slate-900 text-white p-6">
 
-<h2 className="text-2xl font-bold mb-8">CRM</h2>
+ <h2 className="text-2xl font-bold text-center mb-6">DatascienceIRC</h2>
 
 <Nav icon="📊" label="dashboard" set={setPage}/>
 <Nav icon="➕" label="add" set={setPage}/>
@@ -144,6 +144,13 @@ return (
 <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-indigo-500 to-purple-600">
 
 <div className="bg-white p-10 rounded-xl shadow-xl w-96">
+
+  {/* Logo */}
+  <img
+    src="/assets/logo.png"
+    alt="Company Logo"
+    className="mx-auto mb-10 h-10 object-contain"
+  />
 
 <h2 className="text-2xl font-bold text-center mb-6">CRM Login</h2>
 
