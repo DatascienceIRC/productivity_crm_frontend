@@ -3,9 +3,31 @@ import * as XLSX from "xlsx";
 
 const BASE="https://productivity-crm-backend-bafw.onrender.com";
 
+const authHeader = () => ({
+  Authorization: "Bearer " + localStorage.getItem("token")
+});
+
+const safeFetch = async (url, options = {}) => {
+  const res = await fetch(url, {
+    headers: {
+      ...authHeader(),
+      ...(options.headers || {})
+    },
+    ...options
+  });
+
+  if (res.status === 401 || res.status === 403) {
+    localStorage.clear();
+    window.location.reload(); // auto logout
+    return null;
+  }
+
+  return res.json();
+};
+
 export default function App(){
 
-const [auth,setAuth]=useState(!!localStorage.getItem("userId"));
+const [auth,setAuth]=useState(!!localStorage.getItem("token"));
 const [role,setRole]=useState(localStorage.getItem("role"));
 const [page,setPage]=useState("dashboard");
 const [records,setRecords]=useState([]);
@@ -18,15 +40,24 @@ const loadRecords = useCallback(() => {
       ? `${BASE}/records`
       : `${BASE}/records/${localStorage.getItem("userId")}`;
 
-  fetch(url)
-    .then(r => r.json())
-    .then(setRecords);
+safeFetch(url).then(data => {
+  if (data) setRecords(data);
+});
 }, [role]);
 
 
 useEffect(() => {
   if (auth) loadRecords();
 }, [auth, loadRecords]);
+
+// ✅ Auto logout if token missing
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    setAuth(false);
+  }
+}, []);
+
 
 
 if(!auth) return <Login onLogin={(r)=>{setAuth(true);setRole(r)}}/>
@@ -45,7 +76,11 @@ return(
 <Menu icon="📅" label="Reports" set={setPage}/>
 {role==="admin" && <Menu icon="👥" label="Users" set={setPage}/>}
 
-<button onClick={()=>{localStorage.clear();setAuth(false)}}>Logout</button>
+<button onClick={()=>{
+  localStorage.clear();
+  window.location.reload();
+}}>Logout</button>
+
 </div>
 
 {/* CONTENT */}
@@ -93,7 +128,7 @@ body:JSON.stringify({email,password})
 .then(r=>r.json())
 .then(d=>{
 if(!d.success) return alert("Invalid");
-
+localStorage.setItem("token", d.token);
 localStorage.setItem("userId", d.user.id);
 localStorage.setItem("role", d.user.role);
 localStorage.setItem("name", d.user.name);
@@ -122,13 +157,17 @@ function Add({reload}){
 const [date,setDate]=useState("");
 const [task,setTask]=useState("");
 
-const save=()=>{
-fetch(`${BASE}/records`,{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({date,task,userId:localStorage.getItem("userId")})
-}).then(()=>reload());
-}
+const save = () => {
+
+  // ✅ Validation
+  if (!date || !task.trim()) return alert("Fill all fields");
+
+  safeFetch(`${BASE}/records`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ date, task })
+  }).then(() => reload());
+};
 
 return(
 <div>
@@ -147,17 +186,20 @@ function Records({records,setRecords}){
 const [search,setSearch]=useState("");
 const [month,setMonth]=useState("");
 
-const filter=()=>{
-fetch(`${BASE}/filter-records?role=${localStorage.getItem("role")}&userId=${localStorage.getItem("userId")}&search=${search}&month=${month}`)
-.then(r=>r.json()).then(setRecords);
-}
+const filter = () => {
+  safeFetch(`${BASE}/filter-records?search=${search}&month=${month}`)
+  .then(data => {
+    if (data) setRecords(data);
+  });
+};
 
-const excel=()=>{
-const ws=XLSX.utils.json_to_sheet(records);
-const wb=XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,"Data");
-XLSX.writeFile(wb,"records.xlsx");
-}
+const excel = () => {
+  const ws = XLSX.utils.json_to_sheet(records);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Data");
+  XLSX.writeFile(wb, "records.xlsx");
+};
+
 
 return(
 <div>
@@ -190,10 +232,12 @@ return(
 
 function Reports({report,setReport}){
 
-const load=()=>{
-fetch(`${BASE}/monthly-report?role=${localStorage.getItem("role")}&userId=${localStorage.getItem("userId")}`)
-.then(r=>r.json()).then(setReport);
-}
+const load = () => {
+  safeFetch(`${BASE}/monthly-report`)
+  .then(data => {
+    if (data) setReport(data);
+  });
+};
 
 return(
 <div>
@@ -201,7 +245,10 @@ return(
 <button onClick={load}>Load</button>
 
 <table border="1">
+<thead>
 <tr><th>User</th><th>Month</th><th>Year</th><th>Total</th></tr>
+</thead>
+<tbody>
 {report.map((r,i)=>(
 <tr key={i}>
 <td>{r.user}</td>
@@ -210,34 +257,42 @@ return(
 <td>{r.totalTasks}</td>
 </tr>
 ))}
+</tbody>
 </table>
 </div>
 )
 }
-
 /* USERS */
 
 function Users({users,setUsers}){
 
+const loadUsers = () => {
+  safeFetch(`${BASE}/users`)
+  .then(data => {
+    if (data) setUsers(data);
+  });
+};
+
 useEffect(()=>{
-  fetch(`${BASE}/users`)
-    .then(r=>r.json())
-    .then(data => setUsers(data));
-}, [setUsers]);
+  loadUsers();
+}, []);
 
-
-const del=id=>{
-fetch(`${BASE}/users/${id}`,{method:"DELETE"}).then(()=>{
-setUsers(users.filter(u=>u._id!==id))
-})
-}
+const del = id => {
+  safeFetch(`${BASE}/users/${id}`, { method: "DELETE" })
+  .then(() => {
+    setUsers(prev => prev.filter(u => u._id !== id));
+  });
+};
 
 return(
 <div>
 <h3>Users</h3>
 
 <table border="1">
+<thead>
 <tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr>
+</thead>
+<tbody>
 {users.map(u=>(
 <tr key={u._id}>
 <td>{u.name}</td>
@@ -246,6 +301,7 @@ return(
 <td><button onClick={()=>del(u._id)}>Delete</button></td>
 </tr>
 ))}
+</tbody>
 </table>
 </div>
 )
