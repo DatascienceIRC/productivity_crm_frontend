@@ -3,31 +3,32 @@ import * as XLSX from "xlsx";
 
 const BASE="https://productivity-crm-backend-bafw.onrender.com";
 
-const authHeader = () => ({
-  Authorization: "Bearer " + localStorage.getItem("token")
-});
-
 const safeFetch = async (url, options = {}) => {
+
+  const token = localStorage.getItem("token");
+
   const res = await fetch(url, {
+    ...options,
     headers: {
-      ...authHeader(),
+      "Content-Type": "application/json",
+      ...(token && { Authorization: "Bearer " + token }),
       ...(options.headers || {})
-    },
-    ...options
+    }
   });
 
-  if (res.status === 401 || res.status === 403) {
-    localStorage.clear();
-    window.location.reload(); // auto logout
-    return null;
+  // handle non-json responses safely
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
   }
-
-  return res.json();
 };
+
 
 export default function App(){
 
-const [auth,setAuth]=useState(!!localStorage.getItem("token"));
+const [auth,setAuth]=useState(!!localStorage.getItem("userId"));
 const [role,setRole]=useState(localStorage.getItem("role"));
 const [page,setPage]=useState("dashboard");
 const [records,setRecords]=useState([]);
@@ -50,13 +51,6 @@ useEffect(() => {
   if (auth) loadRecords();
 }, [auth, loadRecords]);
 
-// ✅ Auto logout if token missing
-useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    setAuth(false);
-  }
-}, []);
 
 if(!auth) return <Login onLogin={(r)=>{setAuth(true);setRole(r)}}/>
 
@@ -73,7 +67,7 @@ return (
 <Nav icon="📋" label="records" set={setPage}/>
 <Nav icon="📅" label="reports" set={setPage}/>
 
-{role==="admin" && <Nav icon="👥" label="users" set={setPage}/>}
+{/* {role==="admin" && <Nav icon="👥" label="users" set={setPage}/>} */}
 
 <button 
 className="mt-10 w-full bg-red-500 py-2 rounded hover:bg-red-600"
@@ -99,7 +93,7 @@ Welcome {localStorage.getItem("name")}
 
 {page==="reports" && <Reports report={report} setReport={setReport}/>}
 
-{page==="users" && role==="admin" && <Users users={users} setUsers={setUsers}/>}
+{/* {page==="users" && role==="admin" && <Users users={users} setUsers={setUsers}/>} */}
 
 </div>
 </div>
@@ -188,14 +182,19 @@ const [task,setTask]=useState("");
 
 const save = () => {
 
-  // ✅ Validation
   if (!date || !task.trim()) return alert("Fill all fields");
+
+  const userId = localStorage.getItem("userId");
 
   safeFetch(`${BASE}/records`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ date, task })
-  }).then(() => reload());
+    body: JSON.stringify({ date, task, userId })   // 👈 SEND userId
+  }).then(() => {
+    reload();
+    setDate("");
+    setTask("");
+  });
 };
 
 return (
@@ -396,7 +395,7 @@ Click "Load Report" to view monthly summary
 
 }
 /* USERS */
-
+/*
 function Users({users,setUsers}){
 
 const loadUsers = () => {
@@ -431,7 +430,6 @@ return (
 <th className="p-3 text-left font-semibold">Name</th>
 <th className="p-3 text-left font-semibold">Email</th>
 <th className="p-3 text-left font-semibold">Role</th>
-<th className="p-3 text-left font-semibold">Action</th>
 </tr>
 </thead>
 
@@ -453,14 +451,6 @@ return (
 </span>
 </td>
 
-<td className="p-3">
-<button
-  onClick={() => del(u._id)}
-  className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition"
->
-Delete
-</button>
-</td>
 </tr>
 ))}
 </tbody>
@@ -469,7 +459,6 @@ Delete
 
 </div>
 
-{/* EMPTY STATE */}
 
 {users.length === 0 && (
 <p className="text-gray-500 mt-4 text-center">
@@ -481,4 +470,4 @@ No users found
 )
 
 }
-
+*/
