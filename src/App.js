@@ -58,59 +58,68 @@ useEffect(() => {
   }
 }, []);
 
-
-
 if(!auth) return <Login onLogin={(r)=>{setAuth(true);setRole(r)}}/>
 
-return(
-<div style={{display:"flex",height:"100vh"}}>
+return (
+<div className="flex min-h-screen bg-slate-100">
 
 {/* SIDEBAR */}
-<div style={side}>
+<div className="w-64 bg-slate-900 text-white p-6">
 
-<h2>CRM</h2>
+<h2 className="text-2xl font-bold mb-8">CRM</h2>
 
-<Menu icon="📊" label="Dashboard" set={setPage}/>
-<Menu icon="➕" label="Add" set={setPage}/>
-<Menu icon="📋" label="Records" set={setPage}/>
-<Menu icon="📅" label="Reports" set={setPage}/>
-{role==="admin" && <Menu icon="👥" label="Users" set={setPage}/>}
+<Nav icon="📊" label="dashboard" set={setPage}/>
+<Nav icon="➕" label="add" set={setPage}/>
+<Nav icon="📋" label="records" set={setPage}/>
+<Nav icon="📅" label="reports" set={setPage}/>
 
-<button onClick={()=>{
-  localStorage.clear();
-  window.location.reload();
-}}>Logout</button>
+{role==="admin" && <Nav icon="👥" label="users" set={setPage}/>}
+
+<button 
+className="mt-10 w-full bg-red-500 py-2 rounded hover:bg-red-600"
+onClick={()=>{localStorage.clear();setAuth(false)}}
+>
+Logout
+</button>
 
 </div>
 
 {/* CONTENT */}
-<div style={{flex:1,padding:30,background:"#f1f5f9"}}>
+<div className="flex-1 p-8">
 
-{page==="dashboard" && <h2>Welcome {localStorage.getItem("name")}</h2>}
+{page==="dashboard" && (
+<h2 className="text-3xl font-semibold">
+Welcome {localStorage.getItem("name")}
+</h2>
+)}
 
 {page==="add" && <Add reload={loadRecords}/>}
 
-{page==="records" && 
-<Records records={records} setRecords={setRecords}/>}
+{page==="records" && <Records records={records} setRecords={setRecords}/>}
 
-{page==="reports" && 
-<Reports report={report} setReport={setReport}/>}
+{page==="reports" && <Reports report={report} setReport={setReport}/>}
 
-{page==="users" && role==="admin" &&
-<Users users={users} setUsers={setUsers}/>}
+{page==="users" && role==="admin" && <Users users={users} setUsers={setUsers}/>}
 
 </div>
 </div>
 )
+
 }
 
 /* ===== COMPONENTS ===== */
 
-function Menu({icon,label,set}){
-return <div onClick={()=>set(label.toLowerCase())} style={menu}>
-{icon} {label}
-</div>
+function Nav({icon,label,set}){
+return(
+<button
+onClick={()=>set(label)}
+className="w-full text-left px-4 py-2 mb-2 rounded hover:bg-slate-700 transition"
+>
+{icon} {label.charAt(0).toUpperCase()+label.slice(1)}
+</button>
+)
 }
+
 
 /* LOGIN */
 
@@ -137,17 +146,37 @@ onLogin(d.user.role);
 });
 }
 
+return (
+<div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-indigo-500 to-purple-600">
 
-return(
-<div style={loginPage}>
-<div style={loginCard}>
-<h2>CRM Login</h2>
-<input placeholder="Email" onChange={e=>setEmail(e.target.value)} />
-<input type="password" placeholder="Password" onChange={e=>setPassword(e.target.value)} />
-<button onClick={login}>Login</button>
+<div className="bg-white p-10 rounded-xl shadow-xl w-96">
+
+<h2 className="text-2xl font-bold text-center mb-6">CRM Login</h2>
+
+<input
+className="w-full border p-3 rounded mb-4 focus:outline-none focus:ring"
+placeholder="Email"
+onChange={e=>setEmail(e.target.value)}
+/>
+
+<input
+type="password"
+className="w-full border p-3 rounded mb-6 focus:outline-none focus:ring"
+placeholder="Password"
+onChange={e=>setPassword(e.target.value)}
+/>
+
+<button
+onClick={login}
+className="w-full bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700"
+>
+Login
+</button>
+
 </div>
 </div>
 )
+
 }
 
 /* ADD */
@@ -169,14 +198,33 @@ const save = () => {
   }).then(() => reload());
 };
 
-return(
-<div>
-<h3>Add Productivity</h3>
-<input type="date" onChange={e=>setDate(e.target.value)} />
-<textarea onChange={e=>setTask(e.target.value)} />
-<button onClick={save}>Save</button>
+return (
+<div className="bg-white p-6 rounded-xl shadow max-w-lg">
+
+<h3 className="text-xl font-semibold mb-4">Add Productivity</h3>
+
+<input 
+  type="date"
+  className="w-full border p-2 rounded mb-4"
+  onChange={e => setDate(e.target.value)}
+/>
+
+<textarea
+  className="w-full border p-2 rounded mb-4"
+  placeholder="Task description"
+  onChange={e => setTask(e.target.value)}
+/>
+
+<button
+  onClick={save}
+  className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+>
+Save
+</button>
+
 </div>
 )
+
 }
 
 /* RECORDS */
@@ -200,32 +248,79 @@ const excel = () => {
   XLSX.writeFile(wb, "records.xlsx");
 };
 
+return (
+<div className="bg-white p-6 rounded-xl shadow">
 
-return(
-<div>
-<h3>Records</h3>
+<h3 className="text-2xl font-semibold mb-6">Records</h3>
 
-<input placeholder="Search task" onChange={e=>setSearch(e.target.value)}/>
-<input type="month" onChange={e=>setMonth(e.target.value)}/>
-<button onClick={filter}>Filter</button>
-<button onClick={excel}>Export</button>
+{/* FILTER BAR */}
+<div className="flex flex-wrap gap-3 mb-6">
 
-<table border="1">
-<thead>
-<tr><th>User</th><th>Date</th><th>Task</th></tr>
+<input
+  placeholder="Search task..."
+  className="border px-3 py-2 rounded-lg w-60 focus:outline-none focus:ring"
+  onChange={e=>setSearch(e.target.value)}
+/>
+
+<input
+  type="month"
+  className="border px-3 py-2 rounded-lg focus:outline-none focus:ring"
+  onChange={e=>setMonth(e.target.value)}
+/>
+
+<button
+  onClick={filter}
+  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+>
+Filter
+</button>
+
+<button
+  onClick={excel}
+  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+>
+Export Excel
+</button>
+
+</div>
+
+{/* TABLE */}
+<div className="overflow-x-auto rounded-lg border">
+
+<table className="min-w-full bg-white">
+
+<thead className="bg-slate-100 text-slate-700">
+<tr>
+<th className="p-3 text-left font-semibold">User</th>
+<th className="p-3 text-left font-semibold">Date</th>
+<th className="p-3 text-left font-semibold">Task</th>
+</tr>
 </thead>
+
 <tbody>
 {records.map((r,i)=>(
-<tr key={i}>
-<td>{r.name}</td>
-<td>{new Date(r.date).toLocaleDateString()}</td>
-<td>{r.task}</td>
+<tr 
+  key={i} 
+  className="border-b hover:bg-slate-50 transition"
+>
+<td className="p-3">{r.name}</td>
+
+<td className="p-3">
+{new Date(r.date).toLocaleDateString()}
+</td>
+
+<td className="p-3">{r.task}</td>
 </tr>
 ))}
 </tbody>
+
 </table>
+
+</div>
+
 </div>
 )
+
 }
 
 /* REPORTS */
@@ -239,28 +334,66 @@ const load = () => {
   });
 };
 
-return(
-<div>
-<h3>Monthly Report</h3>
-<button onClick={load}>Load</button>
+return (
+<div className="bg-white p-6 rounded-xl shadow">
 
-<table border="1">
-<thead>
-<tr><th>User</th><th>Month</th><th>Year</th><th>Total</th></tr>
+<h3 className="text-2xl font-semibold mb-6">Monthly Reports</h3>
+
+<button
+  onClick={load}
+  className="mb-6 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+>
+Load Report
+</button>
+
+<div className="overflow-x-auto rounded-lg border">
+
+<table className="min-w-full bg-white">
+
+<thead className="bg-slate-100 text-slate-700">
+<tr>
+<th className="p-3 text-left font-semibold">User</th>
+<th className="p-3 text-left font-semibold">Month</th>
+<th className="p-3 text-left font-semibold">Year</th>
+<th className="p-3 text-left font-semibold">Total Tasks</th>
+</tr>
 </thead>
+
 <tbody>
 {report.map((r,i)=>(
-<tr key={i}>
-<td>{r.user}</td>
-<td>{r.month}</td>
-<td>{r.year}</td>
-<td>{r.totalTasks}</td>
+<tr 
+  key={i}
+  className="border-b hover:bg-slate-50 transition"
+>
+<td className="p-3">{r.user}</td>
+<td className="p-3">{r.month}</td>
+<td className="p-3">{r.year}</td>
+<td className="p-3 font-semibold text-indigo-600">
+  {r.totalTasks}
+</td>
 </tr>
 ))}
 </tbody>
+
 </table>
+
+</div>
+
+{/* 👉 EMPTY STATE MESSAGE HERE */}
+{report.length === 0 && (
+<p className="text-gray-500 mt-4 text-center">
+  No reports loaded yet
+</p>
+)}
+
+{report.length === 0 && (
+<p className="text-gray-400 italic mt-4 text-center">
+Click "Load Report" to view monthly summary
+</p>
+)}
 </div>
 )
+
 }
 /* USERS */
 
@@ -284,53 +417,68 @@ const del = id => {
   });
 };
 
-return(
-<div>
-<h3>Users</h3>
+return (
+<div className="bg-white p-6 rounded-xl shadow">
 
-<table border="1">
-<thead>
-<tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr>
+<h3 className="text-2xl font-semibold mb-6">Users</h3>
+
+<div className="overflow-x-auto rounded-lg border">
+
+<table className="min-w-full bg-white">
+
+<thead className="bg-slate-100 text-slate-700">
+<tr>
+<th className="p-3 text-left font-semibold">Name</th>
+<th className="p-3 text-left font-semibold">Email</th>
+<th className="p-3 text-left font-semibold">Role</th>
+<th className="p-3 text-left font-semibold">Action</th>
+</tr>
 </thead>
+
 <tbody>
-{users.map(u=>(
-<tr key={u._id}>
-<td>{u.name}</td>
-<td>{u.email}</td>
-<td>{u.role}</td>
-<td><button onClick={()=>del(u._id)}>Delete</button></td>
+{users.map(u => (
+<tr 
+  key={u._id} 
+  className="border-b hover:bg-slate-50 transition"
+>
+<td className="p-3 font-medium">{u.name}</td>
+<td className="p-3 text-gray-600">{u.email}</td>
+
+<td className="p-3">
+<span className={`px-3 py-1 rounded-full text-sm font-semibold 
+  ${u.role === "admin" 
+    ? "bg-indigo-100 text-indigo-700" 
+    : "bg-green-100 text-green-700"}`}>
+  {u.role}
+</span>
+</td>
+
+<td className="p-3">
+<button
+  onClick={() => del(u._id)}
+  className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition"
+>
+Delete
+</button>
+</td>
 </tr>
 ))}
 </tbody>
+
 </table>
+
+</div>
+
+{/* EMPTY STATE */}
+
+{users.length === 0 && (
+<p className="text-gray-500 mt-4 text-center">
+No users found
+</p>
+)}
+
 </div>
 )
+
 }
 
-/* ===== STYLES ===== */
-
-const side={
-width:220,
-background:"#0f172a",
-color:"#fff",
-padding:20
-};
-
-const menu={
-padding:10,
-cursor:"pointer"
-};
-
-const loginPage={
-height:"100vh",
-display:"flex",
-justifyContent:"center",
-alignItems:"center",
-background:"#eef2ff"
-};
-
-const loginCard={
-background:"#fff",
-padding:40,
-borderRadius:12
-};
