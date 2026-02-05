@@ -33,7 +33,6 @@ const [role,setRole]=useState(localStorage.getItem("role"));
 const [page,setPage]=useState("dashboard");
 const [records,setRecords]=useState([]);
 const [users,setUsers]=useState([]);
-const [report,setReport]=useState([]);
 
 const loadRecords = useCallback(() => {
   const url =
@@ -64,8 +63,8 @@ return (
 
 <Nav icon="📊" label="dashboard" set={setPage}/>
 <Nav icon="➕" label="add" set={setPage}/>
-<Nav icon="📋" label="records" set={setPage}/>
 <Nav icon="📅" label="reports" set={setPage}/>
+<Nav icon="📋" label="records" set={setPage}/>
 
 {/* {role==="admin" && <Nav icon="👥" label="users" set={setPage}/>} */}
 
@@ -89,9 +88,10 @@ Welcome {localStorage.getItem("name")}
 
 {page==="add" && <Add reload={loadRecords}/>}
 
+{page==="reports" && <Reports/>}
+
 {page==="records" && <Records records={records} setRecords={setRecords}/>}
 
-{page==="reports" && <Reports report={report} setReport={setReport}/>}
 
 {/* {page==="users" && role==="admin" && <Users users={users} setUsers={setUsers}/>} */}
 
@@ -236,6 +236,106 @@ Submit Produtivity
 
 }
 
+/* REPORTS */
+
+function Reports(){
+
+  const [daily,setDaily] = useState([]);
+  const [date,setDate] = useState("");
+
+const loadDaily = () => {
+  safeFetch(`${BASE}/daily-report?date=${date}`)
+    .then(data => {
+      if (Array.isArray(data)) {
+        setDaily(data);
+      } else {
+        console.log("Unexpected response:", data);
+        setDaily([]);
+      }
+    });
+};
+
+  const exportExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(
+      daily.map(d => ({
+        User: d.name,
+        Date: new Date(d.date).toLocaleDateString(),
+        Task: d.task
+      }))
+    );
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Daily Report");
+    XLSX.writeFile(wb, "daily-report.xlsx");
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-xl shadow">
+
+      <h3 className="text-2xl font-semibold mb-6">
+        Daily Productivity Reports
+      </h3>
+
+      {/* FILTER */}
+      <div className="flex flex-wrap gap-3 mb-6">
+        <input
+          type="date"
+          className="border px-3 py-2 rounded-lg"
+          onChange={e=>setDate(e.target.value)}
+        />
+
+        <button
+          onClick={loadDaily}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+        >
+          Load Reports
+        </button>
+
+        <button
+          onClick={exportExcel}
+          disabled={daily.length===0}
+          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
+        >
+          Export Excel
+        </button>
+      </div>
+
+      {/* TABLE */}
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="min-w-full bg-white">
+          <thead className="bg-slate-100">
+            <tr>
+              <th className="p-3 text-left">User</th>
+              <th className="p-3 text-left">Date</th>
+              <th className="p-3 text-left">Task</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {Array.isArray(daily) && daily.map((d,i)=>(
+              <tr key={i} className="border-b hover:bg-slate-50">
+                <td className="p-3">{d.name}</td>
+                <td className="p-3">
+                  {new Date(d.date).toLocaleDateString()}
+                </td>
+                <td className="p-3">{d.task}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {daily.length === 0 && (
+        <p className="text-gray-500 mt-4 text-center">
+          Select a date and click "Load Reports"
+        </p>
+      )}
+
+    </div>
+  );
+}
+
+
 /* RECORDS */
 
 function Records({records,setRecords}){
@@ -260,7 +360,7 @@ const excel = () => {
 return (
 <div className="bg-white p-6 rounded-xl shadow">
 
-<h3 className="text-2xl font-semibold mb-6">Records</h3>
+<h3 className="text-2xl font-semibold mb-6">Monthly Records</h3>
 
 {/* FILTER BAR */}
 <div className="flex flex-wrap gap-3 mb-6">
@@ -332,78 +432,6 @@ Export Excel
 
 }
 
-/* REPORTS */
-
-function Reports({report,setReport}){
-
-const load = () => {
-  safeFetch(`${BASE}/monthly-report`)
-  .then(data => {
-    if (data) setReport(data);
-  });
-};
-
-return (
-<div className="bg-white p-6 rounded-xl shadow">
-
-<h3 className="text-2xl font-semibold mb-6">Monthly Reports</h3>
-
-<button
-  onClick={load}
-  className="mb-6 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
->
-Load Report
-</button>
-
-<div className="overflow-x-auto rounded-lg border">
-
-<table className="min-w-full bg-white">
-
-<thead className="bg-slate-100 text-slate-700">
-<tr>
-<th className="p-3 text-left font-semibold">User</th>
-<th className="p-3 text-left font-semibold">Month</th>
-<th className="p-3 text-left font-semibold">Year</th>
-<th className="p-3 text-left font-semibold">Total Tasks</th>
-</tr>
-</thead>
-
-<tbody>
-{report.map((r,i)=>(
-<tr 
-  key={i}
-  className="border-b hover:bg-slate-50 transition"
->
-<td className="p-3">{r.user}</td>
-<td className="p-3">{r.month}</td>
-<td className="p-3">{r.year}</td>
-<td className="p-3 font-semibold text-indigo-600">
-  {r.totalTasks}
-</td>
-</tr>
-))}
-</tbody>
-
-</table>
-
-</div>
-
-{/* 👉 EMPTY STATE MESSAGE HERE */}
-{report.length === 0 && (
-<p className="text-gray-500 mt-4 text-center">
-  No reports loaded yet
-</p>
-)}
-
-{report.length === 0 && (
-<p className="text-gray-400 italic mt-4 text-center">
-Click "Load Report" to view monthly summary
-</p>
-)}
-</div>
-)
-
-}
 /* USERS */
 /*
 function Users({users,setUsers}){
