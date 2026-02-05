@@ -237,36 +237,48 @@ Submit Produtivity
 }
 
 /* REPORTS */
-
 function Reports(){
 
   const [daily,setDaily] = useState([]);
   const [date,setDate] = useState("");
+  const [loading,setLoading] = useState(false);
 
-const loadDaily = () => {
-  safeFetch(`${BASE}/daily-report?date=${date}`)
-    .then(data => {
-      if (Array.isArray(data)) {
-        setDaily(data);
-      } else {
-        console.log("Unexpected response:", data);
-        setDaily([]);
-      }
-    });
-};
+  const loadDaily = async () => {
+
+    if (!date) {
+      alert("Please select date");
+      return;
+    }
+
+    setLoading(true);
+
+    const data = await safeFetch(`${BASE}/daily-report?date=${date}`);
+
+    if (Array.isArray(data)) {
+      setDaily(data);
+    } else {
+      console.log("Unexpected response:", data);
+      setDaily([]);
+    }
+
+    setLoading(false);
+  };
 
   const exportExcel = () => {
+
+    if (daily.length === 0) return;
+
     const ws = XLSX.utils.json_to_sheet(
       daily.map(d => ({
         User: d.name,
-        Date: new Date(d.date).toLocaleDateString(),
+        Date: new Date(d.date).toLocaleDateString("en-GB"),
         Task: d.task
       }))
     );
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Daily Report");
-    XLSX.writeFile(wb, "daily-report.xlsx");
+    XLSX.writeFile(wb, `daily-report-${date}.xlsx`);
   };
 
   return (
@@ -278,17 +290,22 @@ const loadDaily = () => {
 
       {/* FILTER */}
       <div className="flex flex-wrap gap-3 mb-6">
+
         <input
           type="date"
+          value={date}
           className="border px-3 py-2 rounded-lg"
-          onChange={e=>setDate(e.target.value)}
+          onChange={e=>{
+            setDate(e.target.value);
+            setDaily([]); // reset previous results
+          }}
         />
 
         <button
           onClick={loadDaily}
           className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
         >
-          Load Reports
+          {loading ? "Loading..." : "Load Reports"}
         </button>
 
         <button
@@ -298,11 +315,13 @@ const loadDaily = () => {
         >
           Export Excel
         </button>
+
       </div>
 
       {/* TABLE */}
       <div className="overflow-x-auto rounded-lg border">
         <table className="min-w-full bg-white">
+
           <thead className="bg-slate-100">
             <tr>
               <th className="p-3 text-left">User</th>
@@ -312,20 +331,21 @@ const loadDaily = () => {
           </thead>
 
           <tbody>
-            {Array.isArray(daily) && daily.map((d,i)=>(
+            {daily.map((d,i)=>(
               <tr key={i} className="border-b hover:bg-slate-50">
                 <td className="p-3">{d.name}</td>
                 <td className="p-3">
-                  {new Date(d.date).toLocaleDateString()}
+                  {new Date(d.date).toLocaleDateString("en-GB")}
                 </td>
                 <td className="p-3">{d.task}</td>
               </tr>
             ))}
           </tbody>
+
         </table>
       </div>
 
-      {daily.length === 0 && (
+      {daily.length === 0 && !loading && (
         <p className="text-gray-500 mt-4 text-center">
           Select a date and click "Load Reports"
         </p>
@@ -334,7 +354,6 @@ const loadDaily = () => {
     </div>
   );
 }
-
 
 /* RECORDS */
 
@@ -415,7 +434,7 @@ Export Excel
 <td className="p-3">{r.name}</td>
 
 <td className="p-3">
-{new Date(r.date).toLocaleDateString()}
+{new Date(r.date).toLocaleDateString("en-GB")}
 </td>
 
 <td className="p-3">{r.task}</td>
