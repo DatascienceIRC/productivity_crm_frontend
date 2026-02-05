@@ -32,7 +32,11 @@ const [auth,setAuth]=useState(!!localStorage.getItem("userId"));
 const [role,setRole]=useState(localStorage.getItem("role"));
 const [page,setPage]=useState("dashboard");
 const [records,setRecords]=useState([]);
-const [users,setUsers]=useState([]);
+const [user,setUser] = useState({
+  name: localStorage.getItem("name"),
+  email: localStorage.getItem("email"),
+  role: localStorage.getItem("role")
+});
 
 const loadRecords = useCallback(() => {
   const url =
@@ -80,11 +84,52 @@ Logout
 {/* CONTENT */}
 <div className="flex-1 p-8">
 
-{page==="dashboard" && (
-<h2 className="text-3xl font-semibold">
-Welcome {localStorage.getItem("name")}
-</h2>
+{page === "dashboard" && (
+  <div>
+    <h2 className="text-3xl font-semibold mb-6">
+      Welcome {localStorage.getItem("name")} 👋
+    </h2>
+
+    <div className="bg-white shadow-lg rounded-2xl p-8 max-w-lg border border-slate-200">
+      
+      <h3 className="text-xl font-semibold mb-6 text-slate-700">
+        User Information
+      </h3>
+
+      <div className="space-y-4">
+
+        <div className="flex justify-between border-b pb-2">
+          <span className="font-medium text-gray-500">Name</span>
+          <span className="font-semibold text-slate-800">
+            {localStorage.getItem("name")}
+          </span>
+        </div>
+
+        <div className="flex justify-between border-b pb-2">
+          <span className="font-medium text-gray-500">Email</span>
+          <span className="font-semibold text-slate-800">
+            {localStorage.getItem("email")}
+          </span>
+        </div>
+
+        <div className="flex justify-between">
+          <span className="font-medium text-gray-500">Role</span>
+
+          <span className={`px-3 py-1 rounded-full text-sm font-semibold
+            ${localStorage.getItem("role") === "admin"
+              ? "bg-indigo-100 text-indigo-700"
+              : "bg-green-100 text-green-700"}
+          `}>
+            {localStorage.getItem("role")}
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
 )}
+
 
 {page==="add" && <Add reload={loadRecords}/>}
 
@@ -135,6 +180,7 @@ localStorage.setItem("token", d.token);
 localStorage.setItem("userId", d.user.id);
 localStorage.setItem("role", d.user.role);
 localStorage.setItem("name", d.user.name);
+localStorage.setItem("email", d.user.email);
 
 onLogin(d.user.role);
 });
