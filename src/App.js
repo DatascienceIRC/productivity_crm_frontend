@@ -212,7 +212,7 @@ const login = () => {
 return (
 <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-indigo-500 to-purple-600">
 
-<div className="bg-white p-10 rounded-xl shadow-xl w-96">
+<div className="bg-white p-10 rounded-xl shadow-xl w-150">
 
   {/* Logo */}
   <img
@@ -221,7 +221,7 @@ return (
     className="mx-auto mb-10 h-10 object-contain"
   />
 
-<h2 className="text-2xl font-bold text-center mb-6">CRM Login</h2>
+<h2 className="text-2xl font-bold text-center mb-6"> Operations Team CRM Login</h2>
 
 <input
 className="w-full border p-3 rounded mb-4 focus:outline-none focus:ring"
@@ -383,7 +383,7 @@ function Reports(){
     <div className="bg-white p-6 rounded-xl shadow">
 
       <h3 className="text-2xl font-semibold mb-6">
-        Daily Productivity Reports
+        Daily Operations Team Productivity Reports
       </h3>
 
       {/* FILTER */}
@@ -487,7 +487,7 @@ const excel = () => {
 return (
 <div className="bg-white p-6 rounded-xl shadow">
 
-<h3 className="text-2xl font-semibold mb-6">Monthly Records</h3>
+<h3 className="text-2xl font-semibold mb-6">Monthly Operations Team Records</h3>
 
 {/* FILTER BAR */}
 <div className="flex flex-wrap gap-3 mb-6">
