@@ -205,29 +205,32 @@ const save = () => {
 };
 
 return (
-<div className="bg-white p-6 rounded-xl shadow max-w-lg">
+<div className="flex justify-center items-center min-h-[70vh]">
 
-<h3 className="text-xl font-semibold mb-4">Add Productivity</h3>
+<div className="bg-white p-10 rounded-xl shadow max-w-3xl w-full">
+
+<h3 className="text-3xl font-semibold mb-8">Add Productivity</h3>
 
 <input 
   type="date"
-  className="w-full border p-2 rounded mb-4"
+  className="w-full border p-3 rounded mb-4"
   onChange={e => setDate(e.target.value)}
 />
 
 <textarea
-  className="w-full border p-2 rounded mb-4"
-  placeholder="Task description"
+  className="w-full border p-3 rounded mb-4 min-h-[160px] resize-none focus:outline-none focus:ring"
+  placeholder="What did you work today? Describe your tasks and accomplishments..."
   onChange={e => setTask(e.target.value)}
 />
 
 <button
   onClick={save}
-  className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+  className="bg-indigo-600 text-white px-6 py-3 rounded hover:bg-indigo-700 transition"
 >
-Save
+Submit Produtivity
 </button>
 
+</div>
 </div>
 )
 
