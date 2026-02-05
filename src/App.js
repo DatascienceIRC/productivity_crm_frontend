@@ -367,6 +367,7 @@ function Reports(){
     const ws = XLSX.utils.json_to_sheet(
       daily.map(d => ({
         User: d.name,
+        Role: d.role,
         Date: new Date(d.date).toLocaleDateString("en-GB"),
         Task: d.task
       }))
@@ -421,6 +422,7 @@ function Reports(){
           <thead className="bg-slate-100">
             <tr>
               <th className="p-3 text-left">User</th>
+              <th className="p-3 text-left">Role</th>
               <th className="p-3 text-left">Date</th>
               <th className="p-3 text-left">Task</th>
             </tr>
@@ -430,6 +432,7 @@ function Reports(){
             {daily.map((d,i)=>(
               <tr key={i} className="border-b hover:bg-slate-50">
                 <td className="p-3">{d.name}</td>
+                <td className="p-3">{d.role}</td>
                 <td className="p-3">
                   {new Date(d.date).toLocaleDateString("en-GB")}
                 </td>
@@ -466,7 +469,15 @@ const filter = () => {
 };
 
 const excel = () => {
-  const ws = XLSX.utils.json_to_sheet(records);
+  const ws = XLSX.utils.json_to_sheet(
+  records.map(r => ({
+    User: r.name,
+    Role: r.role,
+    Date: new Date(r.date).toLocaleDateString("en-GB"),
+    Task: r.task
+  }))
+);
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Data");
   XLSX.writeFile(wb, "records.xlsx");
@@ -516,6 +527,7 @@ Export Excel
 <thead className="bg-slate-100 text-slate-700">
 <tr>
 <th className="p-3 text-left font-semibold">User</th>
+<th className="p-3 text-left font-semibold">Role</th>
 <th className="p-3 text-left font-semibold">Date</th>
 <th className="p-3 text-left font-semibold">Task</th>
 </tr>
@@ -528,6 +540,7 @@ Export Excel
   className="border-b hover:bg-slate-50 transition"
 >
 <td className="p-3">{r.name}</td>
+<td className="p-3">{r.role}</td>
 
 <td className="p-3">
 {new Date(r.date).toLocaleDateString("en-GB")}
