@@ -41,9 +41,10 @@ const [user,setUser] = useState({
 
 const loadRecords = useCallback(() => {
   const url =
-    role === "admin"
-      ? `${BASE}/records`
-      : `${BASE}/records/${localStorage.getItem("userId")}`;
+  ["admin", "CEO"].includes(role)
+    ? `${BASE}/records`
+    : `${BASE}/records/${localStorage.getItem("userId")}`;
+
 
 safeFetch(url).then(data => {
   if (data) setRecords(data);
