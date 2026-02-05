@@ -32,6 +32,7 @@ const [auth,setAuth]=useState(!!localStorage.getItem("userId"));
 const [role,setRole]=useState(localStorage.getItem("role"));
 const [page,setPage]=useState("dashboard");
 const [records,setRecords]=useState([]);
+
 const [user,setUser] = useState({
   name: localStorage.getItem("name"),
   email: localStorage.getItem("email"),
@@ -90,44 +91,53 @@ Logout
       Welcome {localStorage.getItem("name")} 👋
     </h2>
 
-    <div className="bg-white shadow-lg rounded-2xl p-8 max-w-lg border border-slate-200">
-      
-      <h3 className="text-xl font-semibold mb-6 text-slate-700">
-        User Information
-      </h3>
+    <div className="flex items-center justify-center min-h-[70vh]">
 
-      <div className="space-y-4">
+  <div className="bg-white shadow-lg rounded-xl
+                  p-8
+                  max-w-lg w-full
+                  min-h-[280px]
+                  border border-slate-100">
 
-        <div className="flex justify-between border-b pb-2">
-          <span className="font-medium text-gray-500">Name</span>
-          <span className="font-semibold text-slate-800">
-            {localStorage.getItem("name")}
-          </span>
-        </div>
+    <h3 className="text-3xl font-bold text-slate-900 mb-10 text-center ">
+      User Information
+    <span className="block h-1 bg-indigo-500 mt-2 rounded w-[250px] mx-auto"></span>
+    </h3>
+    
 
-        <div className="flex justify-between border-b pb-2">
-          <span className="font-medium text-gray-500">Email</span>
-          <span className="font-semibold text-slate-800">
-            {localStorage.getItem("email")}
-          </span>
-        </div>
+    <div className="space-y-6">
 
-        <div className="flex justify-between">
-          <span className="font-medium text-gray-500">Role</span>
+      <div className="flex justify-between items-center gap-4 ">
+        <span className="text-lg font-bold text-gray-500">Name</span>
+        <span className="text-lg font-semibold text-slate-800">
+          {localStorage.getItem("name")}
+        </span>
+      </div>
 
-          <span className={`px-3 py-1 rounded-full text-sm font-semibold
-            ${localStorage.getItem("role") === "admin"
-              ? "bg-indigo-100 text-indigo-700"
-              : "bg-green-100 text-green-700"}
-          `}>
-            {localStorage.getItem("role")}
-          </span>
-        </div>
+      <div className="flex justify-between items-center gap-4 ">
+        <span className="text-lg font-bold text-gray-500">Email</span>
+        <span className="text-lg font-semibold text-slate-800">
+          {localStorage.getItem("email")}
+        </span>
+      </div>
 
+      <div className="flex justify-between items-center gap-4">
+        <span className="text-lg font-bold text-gray-500">Role</span>
+
+        <span className={`text-lg font-semibold px-4 py-1.5 rounded-full text-sm font-semibold
+          ${localStorage.getItem("role") === "admin"
+            ? "bg-indigo-100 text-indigo-700"
+            : "bg-green-100 text-green-700"}
+        `}>
+          {localStorage.getItem("role")}
+        </span>
       </div>
 
     </div>
   </div>
+
+</div>
+</div>
 )}
 
 
@@ -166,25 +176,37 @@ function Login({onLogin}){
 
 const [email,setEmail]=useState("");
 const [password,setPassword]=useState("");
+const [error, setError] = useState("");
 
-const login=()=>{
-fetch(`${BASE}/login`,{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({email,password})
-})
-.then(r=>r.json())
-.then(d=>{
-if(!d.success) return alert("Invalid");
-localStorage.setItem("token", d.token);
-localStorage.setItem("userId", d.user.id);
-localStorage.setItem("role", d.user.role);
-localStorage.setItem("name", d.user.name);
-localStorage.setItem("email", d.user.email);
 
-onLogin(d.user.role);
-});
-}
+const login = () => {
+  setError(""); // reset error
+
+  fetch(`${BASE}/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success) {
+        setError("Invalid email or password");
+        return;
+      }
+
+      localStorage.setItem("token", d.token);
+      localStorage.setItem("userId", d.user.id);
+      localStorage.setItem("role", d.user.role);
+      localStorage.setItem("name", d.user.name);
+      localStorage.setItem("email", d.user.email);
+
+      onLogin(d.user.role);
+    })
+    .catch(() => {
+      setError("Server error. Please try again.");
+    });
+};
+
 
 return (
 <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-indigo-500 to-purple-600">
@@ -213,6 +235,12 @@ placeholder="Password"
 onChange={e=>setPassword(e.target.value)}
 />
 
+{error && (
+  <p className="text-red-500 text-sm mb-4 text-center">
+    {error}
+  </p>
+)}
+
 <button
 onClick={login}
 className="w-full bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700"
@@ -232,23 +260,37 @@ function Add({reload}){
 
 const [date,setDate]=useState("");
 const [task,setTask]=useState("");
+const [message, setMessage] = useState("");
 
-const save = () => {
+const save = async () => {
 
-  if (!date || !task.trim()) return alert("Fill all fields");
+  if (!date || !task.trim()) {
+    alert("Fill all fields");
+    return;
+  }
 
   const userId = localStorage.getItem("userId");
 
-  safeFetch(`${BASE}/records`, {
+  await safeFetch(`${BASE}/records`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ date, task, userId })   // 👈 SEND userId
-  }).then(() => {
-    reload();
-    setDate("");
-    setTask("");
+    body: JSON.stringify({ date, task, userId })
   });
+
+  // ✅ CLEAR FORM FIRST
+  setDate("");
+  setTask("");
+
+  // ✅ SHOW SUCCESS MESSAGE
+  setMessage("✅ Productivity submitted successfully");
+
+  // ✅ AUTO-HIDE MESSAGE
+  setTimeout(() => {
+    setMessage("");
+  }, 3000);
+
+  reload();
 };
+
 
 return (
 <div className="flex justify-center items-center min-h-[70vh]">
@@ -259,15 +301,23 @@ return (
 
 <input 
   type="date"
+  value={date}
   className="w-full border p-3 rounded mb-4"
   onChange={e => setDate(e.target.value)}
 />
 
 <textarea
+  value={task}
   className="w-full border p-3 rounded mb-4 min-h-[160px] resize-none focus:outline-none focus:ring"
   placeholder="What did you work today? Describe your tasks and accomplishments..."
   onChange={e => setTask(e.target.value)}
 />
+
+{message && (
+  <p className="text-green-600 font-semibold mb-4 text-center">
+    {message}
+  </p>
+)}
 
 <button
   onClick={save}
